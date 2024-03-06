@@ -42,35 +42,66 @@ def upload():
 
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        
+
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-        
+
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
 
-        with open(file_path, 'r') as url_file:
-            urls = url_file.read().splitlines()
+        with open(file_path, 'r') as file_content:
+            content = file_content.read()
 
-        # results = []
-        # for url in urls:
-        #     headlines, content = scrape_webpage(url)
-        #     print("Content:", content)
-        # if content is not None:
-        #     sentiment = analyze_sentiment(content)
-        #     keywords = extract_keywords(content)
-        #     results.append({'url': url, 'headlines': headlines, 'content': content, 'sentiment': sentiment, 'keywords': keywords})
+        #results = [] 
+            # results = []
+        #  for url in urls:
+           
+                # headlines, content = scrape_webpage(url)
+                # print("Content:", content)
+                # if content is not None:
+                #     sentiment = analyze_sentiment(content)
+                #     keywords = extract_keywords(content)
+        headlines = []  # Adjust this based on the structure of your HTML/TXT file
+        sentiment = analyze_sentiment(content)
+        keywords = extract_keywords(content)
 
-        # return jsonify(results)
-            return jsonify("sucess!")
     
+        score = calculate_score(sentiment, len(keywords))
+  
+        result = {
+            'filename': filename,
+            'headlines': headlines,
+            'content': content,
+            'sentiment': sentiment,
+            'keywords': keywords,
+            'score': score
+        }
+
+        
+        #results.append(result)
+        print(f"Results for {filename}: {result}")
+       # print(f"Score for {filename}: {score}")
+
+        return jsonify(result)
+
     else:
         return jsonify({'error': 'Invalid file type'})
 
 
+  #results.append({'url': url, 'headlines': headlines, 'content': content, 'sentiment': sentiment, 'keywords': keywords})
+def calculate_score(sentiment, num_keywords):
+    # Define your scoring logic here
+    sentiment_score = {'positive': 2, 'neutral': 1, 'negative': 0}.get(sentiment, 0)
+    keyword_score = num_keywords * 0.5  
+    
+    max_possible_score = 2 + (num_keywords * 0.5)
+    total_score = sentiment_score + keyword_score
+    percentage_score = (total_score / max_possible_score) * 100
+    
+    return percentage_score
 
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+# @app.route('/uploads/<filename>')
+# def uploaded_file(filename):
+#     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == "__main__":
     app.run(debug=True)
