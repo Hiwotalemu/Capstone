@@ -8,6 +8,10 @@ from werkzeug.utils import secure_filename
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from pymongo import MongoClient
+import certifi
+from bson.objectid import ObjectId
+from datetime import datetime
 import string
 import spacy
 
@@ -19,6 +23,10 @@ CORS(app, origins="http://localhost:3000")
 # @app.route('/')
 # def index():
 #     return 'Hello, this is the root route!'
+# client = MongoClient("mongodb+srv://group3:P0rznkjsS12VxhRU@newscoverageanalysis.4ay29qx.mongodb.net/?retryWrites=true&w=majority&appName=NewsCoverageAnalysis", tlsCAFile=certifi.where())
+# db = client['news_analysis']
+# user_collection = db['users']
+# result_collection = db['analysis_results']
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'txt', 'html'}
@@ -49,8 +57,11 @@ def upload():
         file.save(file_path)
 
         with open(file_path, 'r') as file_content:
-            content = file_content.read()
+            content = file_content.read() 
 
+
+            
+#create a colder save it and read the script files from the mongo db frmo zip and extracted files 
         #results = [] 
             # results = []
         #  for url in urls:
@@ -66,16 +77,20 @@ def upload():
 
     
         score = calculate_score(sentiment, len(keywords))
+      #  user_id = ObjectId("P0rznkjsS12VxhRU")
   
         result = {
+           # "user_id": user_id,
             'filename': filename,
             'headlines': headlines,
             'content': content,
             'sentiment': sentiment,
             'keywords': keywords,
-            'score': score
+            'score': score,
+            "upload_date" : datetime.now()
         }
-
+     #  result_id = result_collection.insert_one(result).inserted_id
+      #  print(f"Inserted document ID: {result_id}")
         
         #results.append(result)
         print(f"Results for {filename}: {result}")
@@ -105,6 +120,8 @@ def calculate_score(sentiment, num_keywords):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+#client.close()
 
 
 # @app.route('/analyze', methods=['POST'])
