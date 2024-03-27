@@ -2,9 +2,17 @@ from pymongo import MongoClient
 import certifi
 import json
 from datetime import datetime
+from bson import ObjectId
 
+# Atlas values
+MONGO_URI = "mongodb+srv://group3:P0rznkjsS12VxhRU@newscoverageanalysis.4ay29qx.mongodb.net/?retryWrites=true&w=majority&appName=NewsCoverageAnalysis"
+DATABASE_NAME = 'your-database-name'
 
-
+#Establishing connection with Database
+client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
+if (client):
+    print("Established connection with Database")
+db = client['news_analysis']
 
  
 def insert_user(username, password):
@@ -66,39 +74,35 @@ def aggregate_analysis_results(analysis_results):
         "analysis_results": aggregated_results
     }
     return final_document
+
+def retrieve_recent_analysis(user):
+    collection = db['analysis_results']
+    results = collection.find_one({"user": user})
+    # close_connection()
+    return convert_objectid(results)
+
+def convert_objectid(doc):
+    """
+    Recursively convert ObjectId fields to strings in a document or a list of documents.
+    """
+    if isinstance(doc, list):
+        return [convert_objectid(item) for item in doc]
+    
+    if not isinstance(doc, dict):
+        return doc
+
+    for key, value in doc.items():
+        if isinstance(value, ObjectId):
+            doc[key] = str(value)
+        elif isinstance(value, dict) or isinstance(value, list):
+            doc[key] = convert_objectid(value)
+    return doc
+    
+
  
-client = MongoClient("mongodb+srv://group3:P0rznkjsS12VxhRU@newscoverageanalysis.4ay29qx.mongodb.net/?retryWrites=true&w=majority&appName=NewsCoverageAnalysis", tlsCAFile=certifi.where())
-if (client):
-    print("yes")
-# insert_user("johndoe", "pass")
-# user = verify_user("admin", "password")
-# print(user)
-analysis_results = [
-    {"article_id": 1, "url": "https://www.nytimes.com/", "domain": "nytimes", "linkage": ["link1.com", "link2.com"], "bias_score": 0.75},
-
-    {"article_id": 11, "url": "https://www.washingtonpost.com/", "domain": "washingtonpost", "linkage": ["link1.com", "link2.com"], "bias_score": 0.6}
-    # Add more analysis results here...
-]
- 
-aggregated_document = aggregate_analysis_results(analysis_results)
-# temp = json.dumps(aggregated_document, indent=2)
-db = client['news_analysis']
-collection = db['analysis_results']
-insert_doc = collection.insert_one(aggregated_document)
-print(f"inserted document ID : {insert_doc.inserted_id}")
- 
-
-client.close()
-
-
-
-
-# app.config['MONGODB_SETTINGS'] = {
-#     'db': 'your_db_name',
-#     'host': 'mongodb://localhost:27017/
-# }
-
-# db = MongoEngine(app)
+# Remember to close the client connection when the app is terminating
+def close_connection():
+    client.close()
 
 
 

@@ -14,15 +14,16 @@ from bson.objectid import ObjectId
 from datetime import datetime
 import string
 import spacy
+import mongo
 
 app = Flask(__name__)
 CORS(app, origins="http://localhost:3000")
 
 
 
-# @app.route('/')
-# def index():
-#     return 'Hello, this is the root route!'
+@app.route('/')
+def index():
+    return 'Hello, this is the root route!'
 # client = MongoClient("mongodb+srv://group3:P0rznkjsS12VxhRU@newscoverageanalysis.4ay29qx.mongodb.net/?retryWrites=true&w=majority&appName=NewsCoverageAnalysis", tlsCAFile=certifi.where())
 # db = client['news_analysis']
 # user_collection = db['users']
@@ -40,66 +41,70 @@ def allowed_file(filename):
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'})
+    results = mongo.retrieve_recent_analysis("User123")
+    print(results)
+    return results
 
-    file = request.files['file']
+#     if 'file' not in request.files:
+#         return jsonify({'error': 'No file part'})
 
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'})
+#     file = request.files['file']
 
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
+#     if file.filename == '':
+#         return jsonify({'error': 'No selected file'})
 
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+#     if file and allowed_file(file.filename):
+#         filename = secure_filename(file.filename)
 
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(file_path)
+#         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-        with open(file_path, 'r') as file_content:
-            content = file_content.read() 
+#         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+#         file.save(file_path)
+
+#         with open(file_path, 'r') as file_content:
+#             content = file_content.read() 
 
 
             
-#create a colder save it and read the script files from the mongo db frmo zip and extracted files 
-        #results = [] 
-            # results = []
-        #  for url in urls:
+# #create a colder save it and read the script files from the mongo db frmo zip and extracted files 
+#         #results = [] 
+#             # results = []
+#         #  for url in urls:
            
-                # headlines, content = scrape_webpage(url)
-                # print("Content:", content)
-                # if content is not None:
-                #     sentiment = analyze_sentiment(content)
-                #     keywords = extract_keywords(content)
-        headlines = []  # Adjust this based on the structure of your HTML/TXT file
-        sentiment = analyze_sentiment(content)
-        keywords = extract_keywords(content)
+#                 # headlines, content = scrape_webpage(url)
+#                 # print("Content:", content)
+#                 # if content is not None:
+#                 #     sentiment = analyze_sentiment(content)
+#                 #     keywords = extract_keywords(content)
+#         headlines = []  # Adjust this based on the structure of your HTML/TXT file
+#         sentiment = analyze_sentiment(content)
+#         keywords = extract_keywords(content)
 
     
-        score = calculate_score(sentiment, len(keywords))
-      #  user_id = ObjectId("P0rznkjsS12VxhRU")
+#         score = calculate_score(sentiment, len(keywords))
+#       #  user_id = ObjectId("P0rznkjsS12VxhRU")
   
-        result = {
-           # "user_id": user_id,
-            'filename': filename,
-            'headlines': headlines,
-            'content': content,
-            'sentiment': sentiment,
-            'keywords': keywords,
-            'score': score,
-            "upload_date" : datetime.now()
-        }
-     #  result_id = result_collection.insert_one(result).inserted_id
-      #  print(f"Inserted document ID: {result_id}")
+#         result = {
+#            # "user_id": user_id,
+#             'filename': filename,
+#             'headlines': headlines,
+#             'content': content,
+#             'sentiment': sentiment,
+#             'keywords': keywords,
+#             'score': score,
+#             "upload_date" : datetime.now()
+#         }
+#      #  result_id = result_collection.insert_one(result).inserted_id
+#       #  print(f"Inserted document ID: {result_id}")
         
-        #results.append(result)
-        print(f"Results for {filename}: {result}")
-       # print(f"Score for {filename}: {score}")
+#         #results.append(result)
+#         print(f"Results for {filename}: {result}")
+#        # print(f"Score for {filename}: {score}")
 
-        return jsonify(result)
+#         return jsonify(result)
 
-    else:
-        return jsonify({'error': 'Invalid file type'})
+#     else:
+#         return jsonify({'error': 'Invalid file type'})
 
 
   #results.append({'url': url, 'headlines': headlines, 'content': content, 'sentiment': sentiment, 'keywords': keywords})
