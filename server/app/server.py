@@ -10,15 +10,19 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from pymongo import MongoClient
 import certifi
+from urllib.parse import urlparse
+from bs4 import BeautifulSoup
 from bson.objectid import ObjectId
 from datetime import datetime
 import string
 import spacy
 import mongo
+import bs4 
+
 
 app = Flask(__name__)
 CORS(app, origins="http://localhost:3000")
-
+nltk.download('stopwords')
 
 
 @app.route('/')
@@ -41,71 +45,100 @@ def allowed_file(filename):
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    results = mongo.retrieve_recent_analysis("User123")
-    print(results)
-    return results
+#     results = mongo.retrieve_recent_analysis("User123")
+#    #print(results)
+#    //return results
 
-#     if 'file' not in request.files:
-#         return jsonify({'error': 'No file part'})
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'})
 
-#     file = request.files['file']
+    file = request.files['file']
 
-#     if file.filename == '':
-#         return jsonify({'error': 'No selected file'})
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'})
 
-#     if file and allowed_file(file.filename):
-#         filename = secure_filename(file.filename)
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
 
-#         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-#         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-#         file.save(file_path)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
 
-#         with open(file_path, 'r') as file_content:
-#             content = file_content.read() 
+        with open(file_path, 'r') as file_content:
+            content = file_content.read() 
 
 
             
-# #create a colder save it and read the script files from the mongo db frmo zip and extracted files 
-#         #results = [] 
-#             # results = []
-#         #  for url in urls:
+#create a colder save it and read the script files from the mongo db frmo zip and extracted files 
+        #results = [] 
+            # results = []
+        #  for url in urls:
            
-#                 # headlines, content = scrape_webpage(url)
-#                 # print("Content:", content)
-#                 # if content is not None:
-#                 #     sentiment = analyze_sentiment(content)
-#                 #     keywords = extract_keywords(content)
-#         headlines = []  # Adjust this based on the structure of your HTML/TXT file
-#         sentiment = analyze_sentiment(content)
-#         keywords = extract_keywords(content)
+                # headlines, content = scrape_webpage(url)
+                # print("Content:", content)
+                # if content is not None:
+                #     sentiment = analyze_sentiment(content)
+                #     keywords = extract_keywords(content)
+        headlines = []  # Adjust this based on the structure of your HTML/TXT file
+        sentiment = analyze_sentiment(content)
+        keywords = extract_keywords(content)
 
     
-#         score = calculate_score(sentiment, len(keywords))
-#       #  user_id = ObjectId("P0rznkjsS12VxhRU")
+        score = calculate_score(sentiment, len(keywords))
   
-#         result = {
-#            # "user_id": user_id,
-#             'filename': filename,
-#             'headlines': headlines,
-#             'content': content,
-#             'sentiment': sentiment,
-#             'keywords': keywords,
-#             'score': score,
-#             "upload_date" : datetime.now()
-#         }
+        soup = BeautifulSoup(content, 'html.parser')
+
+
+
+        domain_links = {}
+        for link in soup.find_all('a', href=True):
+            url = link['href']
+            domain = urlparse(url).netloc
+            if domain not in domain_links:
+                domain_links[domain] = []
+            domain_links[domain].append(url)
+
+        print("Domain Links:", domain_links)
+
+
+
+        result = {
+           # "user_id": user_id,
+            'filename': filename,
+            'headlines': headlines,
+            #'content': content,
+            'sentiment': sentiment,
+            'keywords': keywords,
+            'score': score,
+            "upload_date" : datetime.now(),
+            'domain_links':domain_links
+        }
+
+#     for domain, links in domain_links.items():
+#         link_info = []
+#         for link in links:
+#         # Analyze the link here if needed
+#         # For example, you might want to extract additional information from the link
+#             link_info.append({'url': link})  # You can add more information as needed
+#     result['domain_links'][domain] = link_info
+
+# # Print or store the result as needed
+#     # print(f"Results for {filename}: {result}")
+
+
 #      #  result_id = result_collection.insert_one(result).inserted_id
 #       #  print(f"Inserted document ID: {result_id}")
         
 #         #results.append(result)
-#         print(f"Results for {filename}: {result}")
-#        # print(f"Score for {filename}: {score}")
+#          print(f"Results for {filename}: {result}")
+       # print(f"Score for {filename}: {score}")
 
-#         return jsonify(result)
+        return jsonify(result)
 
-#     else:
-#         return jsonify({'error': 'Invalid file type'})
-
+    else:
+        return jsonify({'error': 'Invalid file type'})
+#anotehr method for domain where it takes the links from the pulled and saved file and prints the domain dictionary within each itll have 
 
   #results.append({'url': url, 'headlines': headlines, 'content': content, 'sentiment': sentiment, 'keywords': keywords})
 def calculate_score(sentiment, num_keywords):
