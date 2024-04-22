@@ -2,7 +2,10 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from collections import Counter
 
+excluded_words = ['said', 'news']
+
 def extract_keywords(text, domain_texts=None):
+    
     all_texts = [text]
     if domain_texts:
         all_texts.extend(domain_texts)
@@ -12,7 +15,7 @@ def extract_keywords(text, domain_texts=None):
     tokens = word_tokenize(combined_text)
 
     stop_words = set(stopwords.words('english'))
-    filtered_tokens = [word.lower() for word in tokens if word.isalnum() and word.lower() not in stop_words]
+    filtered_tokens = [word.lower() for word in tokens if word.isalnum() and word.lower() not in stop_words and word.lower() not in excluded_words]
 
     word_freq = Counter(filtered_tokens)
 
