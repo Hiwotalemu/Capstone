@@ -35,47 +35,9 @@ UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'txt', 'html'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# MongoDB connection setup
-MONGO_URI = "mongodb+srv://group3:P0rznkjsS12VxhRU@newscoverageanalysis.4ay29qx.mongodb.net/?retryWrites=true&w=majority&appName=NewsCoverageAnalysis"
-client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
-db = client['news_analysis']
-collection = db['analysis_results']
 
-# Define route to view a specific past collection
-@app.route('/get-collection', methods=['GET'])
-def get_collection():
-    collection_id = request.args.get('id')
-    if not collection_id:
-        return jsonify({'error': 'Missing collection ID'}), 400
 
-    try:
-        # Retrieve the collection data from MongoDB
-        collection_data = collection.find_one({'_id': ObjectId(collection_id)})
-        if collection_data:
-            # Convert ObjectId to string for JSON serialization
-            collection_data['_id'] = str(collection_data['_id'])
-            return jsonify(collection_data)
-        else:
-            return jsonify({'error': 'Collection not found'}), 404
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
-# Define route to delete a specific past collection
-@app.route('/delete-collection', methods=['DELETE'])
-def delete_collection():
-    collection_id = request.args.get('id')
-    if not collection_id:
-        return jsonify({'error': 'Missing collection ID'}), 400
-
-    try:
-        # Delete the collection from MongoDB
-        result = collection.delete_one({'_id': ObjectId(collection_id)})
-        if result.deleted_count > 0:
-            return jsonify({'message': 'Collection deleted successfully'})
-        else:
-            return jsonify({'error': 'Collection not found'}), 404
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
