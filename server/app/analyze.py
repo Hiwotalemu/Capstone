@@ -1,13 +1,15 @@
-# from textblob import TextBlob
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 def analyze_sentiment(text):
-   # analysis = TextBlob(text)
     if text is None:
         return 'N/A'  
-    analysis = 0
-    if analysis > 0:
+
+    analyzer = SentimentIntensityAnalyzer()
+    sentiment_score = analyzer.polarity_scores(text)
+
+    if sentiment_score['compound'] >= 0.05:
         return 'positive'
-    elif analysis < 0:
+    elif sentiment_score['compound'] <= -0.05:
         return 'negative'
     else:
         return 'neutral'

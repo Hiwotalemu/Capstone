@@ -20,6 +20,8 @@ import mongo
 import bs4 
 import time
 from collections import defaultdict
+import time
+from collections import defaultdict
 
 
 app = Flask(__name__)
@@ -30,10 +32,6 @@ nltk.download('stopwords')
 @app.route('/')
 def index():
     return 'Hello, this is the root route!'
-# client = MongoClient("mongodb+srv://group3:P0rznkjsS12VxhRU@newscoverageanalysis.4ay29qx.mongodb.net/?retryWrites=true&w=majority&appName=NewsCoverageAnalysis", tlsCAFile=certifi.where())
-# db = client['news_analysis']
-# user_collection = db['users']
-# result_collection = db['analysis_results']
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'txt', 'html'}
@@ -41,8 +39,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 
+
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 
 @app.route('/get-analysis-by-id')
 def get_analysis_by_id():
@@ -53,7 +55,6 @@ def get_analysis_by_id():
     try:
         document = mongo.retrieve_analysis(analysis_id)
         if document:
-            # Assuming document['data'] holds the data you want to send back
             return jsonify(document['data'])
         else:
             return jsonify({'error': 'Analysis not found'}), 404
@@ -126,7 +127,6 @@ def upload():
 
   #results.append({'url': url, 'headlines': headlines, 'content': content, 'sentiment': sentiment, 'keywords': keywords})
 def calculate_score(sentiment, num_keywords):
-    # Define your scoring logic here
     sentiment_score = {'positive': 2, 'neutral': 1, 'negative': 0}.get(sentiment, 0)
     keyword_score = num_keywords * 0.5  
     
@@ -142,4 +142,31 @@ def calculate_score(sentiment, num_keywords):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+#client.close()
+
+
+# @app.route('/analyze', methods=['POST'])
+# def analyze_document():
+#     if 'file' not in request.files:
+#         return jsonify({'error': 'No file part'})
+
+#     file = request.files['file']
+
+#     if file.filename == '':
+#         return jsonify({'error': 'No selected file'})
+
+#     text = file.read().decode('utf-8')
+    
+#     # Use spaCy for keyword extraction
+#     doc = nlp(text)
+#     keywords = [token.text for token in doc if token.is_alpha and not token.is_stop]
+
+#     # Your analysis results can be sent as JSON
+#     result = {
+#         'keywords': keywords,
+#         'text': text  # You may want to send the original text for reference
+#     }
+
+#     return jsonify(result)
 

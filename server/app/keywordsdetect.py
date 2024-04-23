@@ -3,7 +3,6 @@ from nltk.corpus import stopwords
 from collections import Counter
 
 excluded_words = ['said', 'news']
-
 def extract_keywords(text, domain_texts=None):
     
     all_texts = [text]
