@@ -8,6 +8,9 @@ import LoginSignup from './Components/Login/LoginSignUp';
 import AnalysisResultsTable from './Components/Analysis/AnalysisTable';
 import DataDisplayComponent from './Components/Analysis/DataDisplayComponent';
 import PastAnalysis from './Components/Analysis/PastAnalysis';
+import Modal, { ModalTitle } from './Components/Analysis/Modal';
+import { AuthProvider, useAuth } from './contexts/AuthContexts';
+import { useNavigate } from 'react-router-dom';
 
 const TableContainer = styled.div` margin-top: 20px; `;
 const Table = styled.table` width: 100%; border-collapse: collapse; `;
@@ -38,28 +41,46 @@ const ScrollableTableContainer = styled.div`
   overflow-x: auto;  // Allows horizontal scrolling
 `;
 
+
 const App = () => {
-  const [files, setFiles] = useState([]);
-  const [result, setResult] = useState(null);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [aboutActive, setAboutActive] = useState(false);
+  const HomePage = () => {
+    const [files, setFiles] = useState([]);
+    const [result, setResult] = useState(null);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [aboutActive, setAboutActive] = useState(false);
 
-  const toggleMenu = () => { setMenuOpen(!menuOpen); };
-  const handleFileChange = (event) => { setFiles([...event.target.files]); };
-  const [historicalData, setHistoricalData] = useState([]);
-  const [loadingHistoricalData, setLoadingHistoricalData] = useState(false);
+    const toggleMenu = () => { setMenuOpen(!menuOpen); };
+    const handleFileChange = (event) => { 
+      setFiles([...event.target.files]); 
+      setFilesSelected(true);
+    };
+    const [historicalData, setHistoricalData] = useState([]);
+    const [loadingHistoricalData, setLoadingHistoricalData] = useState(false);
 
-  const [collectionName, setCollectionName] = useState("");
+    const [collectionName, setCollectionName] = useState("");
+    const [showModal, setShowModal] = useState(false);
 
-  const handleCollectionNameChange = (event) => {
-    setCollectionName(event.target.value);
-  };
+    const handleCollectionNameChange = (event) => {
+      setCollectionName(event.target.value);
+    };
+    const [filesSelected, setFilesSelected] = useState(false);
 
-  useEffect(() => {
+    const uploadButtonDisabled = !filesSelected;
+    const currentUser = localStorage.getItem("username")
+
+    console.log("CurrentUser in App:", currentUser);
+
     const fetchHistoricalData = async () => {
       setLoadingHistoricalData(true);
+      const endpoint = currentUser
+        ? `/get-historical-data?username=${encodeURIComponent(currentUser)}`
+        : '/get-historical-data?username=public'; // If no user is logged in, fetch public data
+    
       try {
-        const response = await fetch('/get-historical-data'); // Ensure this endpoint is correct
+        const response = await fetch(endpoint);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
         const data = await response.json();
         setHistoricalData(data);
       } catch (error) {
@@ -68,28 +89,32 @@ const App = () => {
         setLoadingHistoricalData(false);
       }
     };
+    
+    // Use useEffect to call fetchHistoricalData on component mount and whenever currentUser changes
+    useEffect(() => {
+      fetchHistoricalData();
+    }, [currentUser]);
 
-    fetchHistoricalData();
-  }, []);
+    useEffect(() => {
+      const handleScroll = () => {
+        const aboutSection = document.getElementById('about');
+        if (aboutSection && window.scrollY >= aboutSection.offsetTop - window.innerHeight / 2) {
+          setAboutActive(true);
+        } else {
+          setAboutActive(false);
+        }
+      };
+      window.addEventListener('scroll', handleScroll);
+      return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const aboutSection = document.getElementById('about');
-      if (aboutSection && window.scrollY >= aboutSection.offsetTop - window.innerHeight / 2) {
-        setAboutActive(true);
-      } else {
-        setAboutActive(false);
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const handleUpload = async () => {
-    const formData = new FormData();
-    formData.append('collection_name', collectionName);
-    for (let file of files) {
-        formData.append('files', file);  // Match this key 'files' with the backend
+    const handleUpload = async () => {
+      setShowModal(false)
+      const formData = new FormData();
+      formData.append('user', currentUser ? currentUser : 'public');
+      formData.append('collection_name', collectionName);
+      for (let file of files) {
+          formData.append('files', file);  // Match this key 'files' with the backend
     }
 
     try {
@@ -99,14 +124,24 @@ const App = () => {
         });
         const resultData = await response.json();
         setResult(resultData);
+        await fetchHistoricalData();
     } catch (error) {
         console.error('Error uploading files:', error);
     }
   };
 
 
-  return (
-    <Router>
+  const handleCreateCollection = () => {
+    setShowModal(true); // Open the modal when button is clicked
+  };
+
+  const closeModal = () => {
+    setShowModal(false); // Close the modal
+  };
+    const {logout } = useAuth();
+    const navigate = useNavigate();
+    
+    return (
       <>
         <GlobalStyles />
         <Nav>
@@ -115,7 +150,11 @@ const App = () => {
             <Link to="Home" smooth={true} duration={500}><MenuItem>Home</MenuItem></Link>
             <Link to="about" smooth={true} duration={500}><MenuItem>About</MenuItem></Link>
             <Link to="Analysis" smooth={true} duration={500}><MenuItem>Analysis</MenuItem></Link>
-            <Link to="/login" smooth={true} duration={500}><MenuItem>User</MenuItem></Link>
+            {
+              currentUser
+                ? <MenuItem onClick={() => { logout(); navigate('/'); }}>Logout</MenuItem>
+                : <MenuItem onClick={() => navigate('/login')}>Login</MenuItem>
+            }
           </NavLinks>
           <HamburgerNav id="hamburger-nav">
             <HamburgerMenu className="hamburger-menu" onClick={toggleMenu}>
@@ -130,7 +169,9 @@ const App = () => {
                 <MenuItem href="#">Home</MenuItem>
                 <MenuItem href="#">About</MenuItem>
                 <MenuItem href="#">Analysis</MenuItem>
-                <MenuItem href="#">User</MenuItem>
+                <MenuItem onClick={currentUser ? logout : () => navigate('/login')}>
+                  {currentUser ? 'Logout' : 'Login'}
+                </MenuItem>
               </MenuList>
             </MenuLinks>
           </HamburgerNav>
@@ -148,17 +189,25 @@ const App = () => {
           </Description>
         </AboutSection>
         <Analysis id="Analysis">
+        <Modal show={showModal} closeModal={closeModal}>
+          <ModalTitle>Create Collection</ModalTitle>
+          
           <BtnContainer>
             <input type="file" name="files[]" multiple onChange={handleFileChange} style={{ display: 'none' }} />
             <Btn className="btn-color-1" onClick={() => document.querySelector('input[type="file"]').click()}>Choose Files</Btn>
-            <Btn className="btn-color-1" onClick={handleUpload}>Upload</Btn>
             <input
               type="text"
               value={collectionName}
               onChange={handleCollectionNameChange}
               placeholder="Enter collection name"
             />
+            <Btn className="btn-color-1" onClick={handleUpload} disabled={uploadButtonDisabled}>Upload</Btn>
           </BtnContainer>
+        </Modal>
+        <BtnContainer>
+          <Btn onClick={handleCreateCollection}>Create Collection</Btn>
+        </BtnContainer>
+        
           {result && (
             <Container2 className="innerContainer">
               <h2>Analysis Results:</h2>
@@ -175,7 +224,21 @@ const App = () => {
           <Title></Title>
         </User>
       </>
+    )
+  };
+
+
+  return (
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginSignup />} />
+          <Route path="*" element={<HomePage />} />
+        </Routes>
+      
+      </AuthProvider>
     </Router>
+
   );
 };
 

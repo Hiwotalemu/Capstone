@@ -20,8 +20,7 @@ import mongo
 import bs4 
 import time
 from collections import defaultdict
-import time
-from collections import defaultdict
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 app = Flask(__name__)
@@ -37,13 +36,38 @@ UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'txt', 'html'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-
-
-
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
+@app.route('/api/signup', methods=['POST'])
+def signup():
+    username = request.json.get('username')
+    password = request.json.get('password')
+    user_exists = mongo.verify_user(username)
+    if user_exists:
+        print("User already exists")
+        return jsonify({"message": "User already exists"}), 409
+
+    # Create new user
+    hashed_password = generate_password_hash(password)
+    mongo.insert_user(username, hashed_password)
+
+    return jsonify({"message": "User created successfully"}), 201
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    # users = mongo.db.users
+    username = request.json.get('username')
+    password = request.json.get('password')
+    # user = users.find_one({"username": username})
+    user = mongo.verify_user(username)
+    if user and check_password_hash(user['password'], password):
+        print("Login successful: ", username)
+        return jsonify({"message": "Login successful", "username": username}), 200
+    else:
+        print("Invalid username or password")
+        return jsonify({"message": "Invalid username or password"}), 401
 
 
 @app.route('/get-analysis-by-id')
@@ -63,7 +87,8 @@ def get_analysis_by_id():
 
 @app.route('/get-historical-data')
 def get_historical_data():
-    documents = mongo.retrieve_all_results()
+    username = request.args.get('username')
+    documents = mongo.retrieve_all_results(username)
     return jsonify(documents)
 
 
@@ -73,6 +98,7 @@ def upload():
     #     return jsonify({'error': 'No file part in the request'})
     # print(request.files.collection_name)
     collection_name = request.form.get('collection_name')
+    user = request.form.get('user')
     if 'files' not in request.files:
         return jsonify({'error': 'No file part in the request'})
 
@@ -121,7 +147,7 @@ def upload():
     }
 
     print(results)
-    mongo.insert_result(results, collection_name)  # Assuming `mongo.insert_result` is a valid method
+    mongo.insert_result(results, collection_name, user)  # Assuming `mongo.insert_result` is a valid method
     return jsonify(results)
 #anotehr method for domain where it takes the links from the pulled and saved file and prints the domain dictionary within each itll have 
 

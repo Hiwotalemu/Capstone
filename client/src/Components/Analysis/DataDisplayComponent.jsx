@@ -59,9 +59,12 @@ const DataDisplayComponent = ({ data }) => {
   };
 
   const formatDomainLinksCount = (domainLinksCount) => {
+    // Convert the object to an array of [domain, count] pairs and sort them by count in descending order
+    const sortedDomainLinks = Object.entries(domainLinksCount).sort((a, b) => b[1] - a[1]);
+  
     return (
       <ul>
-        {Object.entries(domainLinksCount).map(([domain, count], index) => (
+        {sortedDomainLinks.map(([domain, count], index) => (
           <li key={index}>
             {domain}: {count}
           </li>

@@ -25,10 +25,10 @@ def insert_user(username, password):
     insert_doc = collection.insert_one(document)
     print(f"inserted document ID : {insert_doc.inserted_id}")
  
-def verify_user(username, password):
+def verify_user(username):
     db = client['news_analysis']
     collection = db['users']
-    user = collection.find_one({"username": username, "password": password})
+    user = collection.find_one({"username": username})
     return user
  
 # def create_analysis_document(article_id, domain, url, competitor_links, bias_score, analysis_timestamp):
@@ -110,9 +110,10 @@ def aggregate_analysis_results(analysis_results):
     }
     return final_document
 
-def insert_result(results, collection_name):
+def insert_result(results, collection_name, user):
     collection = db['analysis_results']
     document = {
+        "user": user,
         "collection_name": collection_name,
         "date": datetime.now(),
         "data": results
@@ -120,9 +121,9 @@ def insert_result(results, collection_name):
     insert_doc = collection.insert_one(document)
     print(f"inserted document ID : {insert_doc.inserted_id}")
 
-def retrieve_all_results():
+def retrieve_all_results(username):
     collection = db['analysis_results']
-    documents = collection.find({}, {'_id': 1, 'collection_name': 1, 'date': 1})
+    documents = collection.find({'user': username}, {'_id': 1, 'collection_name': 1, 'user': 1, 'date': 1})
     
     # Ensure the documents can be serialized properly
     documents = [{'_id': str(doc['_id']), 'date': doc['date'].strftime('%Y-%m-%d %H:%M:%S'), 'collection_name': doc['collection_name']} for doc in documents]

@@ -90,3 +90,35 @@
     background: #e6e2e2;
     color: #cec5c5;
 }
+
+.toggle-button {
+    background: none;
+    border: none;
+    color: rgb(9, 150, 237); /* Or any other color you want for the text */
+    font-size: 16px;
+    cursor: pointer;
+    padding: 10px;
+    text-decoration: underline; /* If you want to indicate it's clickable */
+}
+
+/* You might want to add hover effects for better interactivity */
+.toggle-button:hover {
+    text-decoration: none; /* Remove underline on hover, for example */
+    color: rgb(5, 100, 200); /* Or make the color darker on hover */
+}
+
+.message-box {
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+    color: #fff;
+}
+
+.success {
+    background-color: #4CAF50; /* Green for success */
+}
+
+.error {
+    background-color: #f44336; /* Red for error */
+}
