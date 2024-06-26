@@ -1,6 +1,7 @@
 # Capstone
 Analysis of the coverage of crisis events by news agencies provides important information for historians, activists, and the general public. Detecting bias in news coverage is a direct benefit. Thus, there is a need for an automated tool that, given a set of crisis events and a dataset of webpages about these events, can extract the set of news media outlets that reported about these events and how frequently, the types of events covered by each media outlet, and how each news media outlet links to other outlets, if any. Bias detection and sentiment analysis can then be applied to each media outlet to discover hidden patterns. 
 
+<img width="528" alt="Screenshot 2024-06-26 at 6 28 33 PM" src="https://github.com/Hiwotalemu/Capstone/assets/107221711/ea010f02-5676-4577-b676-15c32e571643">
 
 
 The web application we have designed will allow users to provide a collection of URLs or HTML files for webpages reporting on a crisis event. The program will provide a thorough analysis of the provided collection, detecting bias in news coverage as well as linkage between different domains. The results of this analysis will then be returned to the user, offering insights into their provided collection of news articles in a way that is accurate, informative, and easy to understand. 
@@ -32,6 +33,8 @@ The backend’s second purpose is to handle all the analysis and processing. Thi
 
 <img width="592" alt="Screenshot 2024-06-26 at 6 23 07 PM" src="https://github.com/Hiwotalemu/Capstone/assets/107221711/e952de84-6aef-4a1d-9397-af0bf4e8af32">
 
+
+<img width="544" alt="Screenshot 2024-06-26 at 6 27 15 PM" src="https://github.com/Hiwotalemu/Capstone/assets/107221711/eca2ff93-de02-4fda-a492-9f1c277bac19">
 
 
 
